@@ -1,15 +1,14 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import './globals.css'
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  if (pathname.startsWith('/_next') || pathname.includes('.')) {
-    return NextResponse.next()
-  }
-
-  return NextResponse.next()
+export const metadata = {
+  title: 'Cpazen',
+  description: 'AI-powered CPA offer tracking',
 }
 
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="bg-slate-950 text-slate-50 antialiased">{children}</body>
+    </html>
+  )
 }

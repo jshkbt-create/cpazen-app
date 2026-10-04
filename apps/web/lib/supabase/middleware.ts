@@ -1,9 +1,20 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
-export function createMiddlewareClient(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  const publicRoutes = ['/', '/login', '/register']
+  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/api/')
+
+  if (isPublicRoute) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
-    request: { headers: request.headers },
+    request: {
+      headers: request.headers,
+    },
   })
 
   const supabase = createServerClient(
@@ -14,19 +25,37 @@ export function createMiddlewareClient(request: NextRequest) {
         get(name: string) {
           return request.cookies.get(name)?.value
         },
-        set(name: string, value: string, options: CookieOptions) {
+        set(name: string, value: string, options: { path?: string; expires?: Date; maxAge?: number; domain?: string; secure?: boolean; sameSite?: 'lax' | 'strict' | 'none' }) {
           request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          })
           response.cookies.set({ name, value, ...options })
         },
-        remove(name: string, options: CookieOptions) {
+        remove(name: string, options: { path?: string; expires?: Date; maxAge?: number; domain?: string; secure?: boolean; sameSite?: 'lax' | 'strict' | 'none' }) {
           request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          })
           response.cookies.set({ name, value: '', ...options })
         },
       },
     }
   )
 
-  return { supabase, response }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user && pathname.startsWith('/dashboard')) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirectTo', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
