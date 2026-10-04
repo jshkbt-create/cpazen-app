@@ -1,59 +1,36 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-interface UseAutoRefreshOptions {
-  onRefresh?: () => void
-}
-
-export function useAutoRefresh(
-  key: string,
-  intervalSeconds: number = 30,
-  options: UseAutoRefreshOptions = {}
-) {
+export function useAutoRefresh(intervalSeconds = 30, onRefresh?: () => void) {
   const [isPaused, setIsPaused] = useState(false)
   const [nextRefresh, setNextRefresh] = useState(intervalSeconds)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const countdownRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const trigger = useCallback(() => {
-    options.onRefresh?.()
+    onRefresh?.()
     setNextRefresh(intervalSeconds)
-  }, [intervalSeconds, options])
+  }, [intervalSeconds, onRefresh])
 
   useEffect(() => {
     if (isPaused || intervalSeconds <= 0) {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      if (countdownRef.current) clearInterval(countdownRef.current)
+      if (timerRef.current) clearInterval(timerRef.current)
       return
     }
 
-    intervalRef.current = setInterval(trigger, intervalSeconds * 1000)
+    timerRef.current = setInterval(() => {
+      trigger()
+    }, intervalSeconds * 1000)
 
-    countdownRef.current = setInterval(() => {
-      setNextRefresh(prev => {
-        if (prev <= 1) return intervalSeconds
-        return prev - 1
-      })
+    const countdown = setInterval(() => {
+      setNextRefresh((prev) => Math.max(0, prev - 1))
     }, 1000)
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      if (countdownRef.current) clearInterval(countdownRef.current)
+      if (timerRef.current) clearInterval(timerRef.current)
+      clearInterval(countdown)
     }
-  }, [isPaused, intervalSeconds, trigger])
+  }, [intervalSeconds, isPaused, trigger])
 
-  const togglePause = useCallback(() => {
-    setIsPaused(prev => !prev)
-    if (isPaused) {
-      setNextRefresh(intervalSeconds)
-    }
-  }, [isPaused, intervalSeconds])
-
-  return {
-    isPaused,
-    togglePause,
-    nextRefresh,
-    trigger,
-  }
+  return { isPaused, setIsPaused, nextRefresh, trigger }
 }

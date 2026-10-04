@@ -1,24 +1,18 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from '@tanstack/react-query'
 
-interface StatsParams {
-  days?: number
-  campaignId?: string
-}
-
-export function useStats(params: StatsParams = {}) {
+export function useStats(params: { days?: number; campaignId?: string } = {}) {
   const { days = 7, campaignId } = params
 
   return useQuery({
-    queryKey: ["stats", days, campaignId],
+    queryKey: ['stats', days, campaignId],
     queryFn: async () => {
-      const searchParams = new URLSearchParams()
-      searchParams.set("days", String(days))
-      if (campaignId) searchParams.set("campaignId", campaignId)
+      const params = new URLSearchParams({ days: String(days) })
+      if (campaignId) params.set('campaignId', campaignId)
 
-      const res = await fetch(`/api/stats?${searchParams}`)
-      if (!res.ok) throw new Error("Failed to fetch stats")
+      const res = await fetch(`/api/stats?${params.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch stats')
       return res.json()
     },
     refetchInterval: 30000,

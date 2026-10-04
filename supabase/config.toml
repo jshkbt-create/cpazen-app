@@ -1,0 +1,6 @@
+[api]
+port = 54321
+schemas = "public"
+
+[db]
+shadow_port = 54322
