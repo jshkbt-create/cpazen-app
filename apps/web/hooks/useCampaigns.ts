@@ -1,29 +1,30 @@
-"use client"
+'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { apiClient } from '@/lib/utils/api-client'
 
-export function useCampaigns() {
-  const queryClient = useQueryClient()
+export function useCampaigns(userId: string | undefined) {
+  const [campaigns, setCampaigns] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const query = useQuery({
-    queryKey: ['campaigns'],
-    queryFn: async () => {
-      const res = await fetch('/api/campaigns')
-      if (!res.ok) throw new Error('Failed to fetch campaigns')
-      return res.json()
-    },
-  })
+  useEffect(() => {
+    if (!userId) return
 
-  const toggle = useMutation({
-    mutationFn: async (campaignId: string) => {
-      const res = await fetch(`/api/campaigns/${campaignId}/toggle`, { method: 'POST' })
-      if (!res.ok) throw new Error('Failed to toggle campaign')
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaigns'] })
-    },
-  })
+    const fetchCampaigns = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.fetchCampaigns(userId)
+        setCampaigns(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch campaigns')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  return { ...query, toggleStatus: toggle.mutate }
+    fetchCampaigns()
+  }, [userId])
+
+  return { campaigns, loading, error }
 }

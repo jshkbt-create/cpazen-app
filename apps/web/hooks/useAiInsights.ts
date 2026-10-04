@@ -1,15 +1,27 @@
-"use client"
+'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { apiClient } from '@/lib/utils/api-client'
 
-export function useAiInsights() {
-  return useQuery({
-    queryKey: ['ai-insights'],
-    queryFn: async () => {
-      const res = await fetch('/api/insights')
-      if (!res.ok) throw new Error('Failed to fetch insights')
-      return res.json()
-    },
-    refetchInterval: 60000,
-  })
+export function useAiInsights(userId: string | undefined) {
+  const [insights, setInsights] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!userId) return
+
+    const fetchInsights = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.fetchAiInsights(userId)
+        setInsights(data)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInsights()
+  }, [userId])
+
+  return { insights, loading }
 }

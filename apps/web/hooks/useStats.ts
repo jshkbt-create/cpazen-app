@@ -1,20 +1,50 @@
-"use client"
+'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { apiClient } from '@/lib/utils/api-client'
 
-export function useStats(params: { days?: number; campaignId?: string } = {}) {
-  const { days = 7, campaignId } = params
+export interface DashboardStats {
+  totalClicks: number
+  totalConversions: number
+  totalSpend: number
+  totalRevenue: number
+  roi: number
+  ctr: number
+}
 
-  return useQuery({
-    queryKey: ['stats', days, campaignId],
-    queryFn: async () => {
-      const params = new URLSearchParams({ days: String(days) })
-      if (campaignId) params.set('campaignId', campaignId)
-
-      const res = await fetch(`/api/stats?${params.toString()}`)
-      if (!res.ok) throw new Error('Failed to fetch stats')
-      return res.json()
-    },
-    refetchInterval: 30000,
+export function useStats(campaignId?: string) {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalClicks: 0,
+    totalConversions: 0,
+    totalSpend: 0,
+    totalRevenue: 0,
+    roi: 0,
+    ctr: 0,
   })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!campaignId) return
+
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+        const data = await apiClient.fetchCampaignStats(campaignId)
+        setStats({
+          totalClicks: data.clicks,
+          totalConversions: data.conversions,
+          totalSpend: 0,
+          totalRevenue: 0,
+          roi: 0,
+          ctr: data.ctr,
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [campaignId])
+
+  return { stats, loading }
 }

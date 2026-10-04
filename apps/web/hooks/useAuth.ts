@@ -1,29 +1,42 @@
-"use client"
+'use client'
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
-import type { User } from '@supabase/supabase-js'
+import { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    const getSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       setUser(user)
       setLoading(false)
     }
 
-    load()
+    getSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      authListener?.subscription.unsubscribe()
+    }
+  }, [supabase.auth])
 
-  return { user, loading }
+  const logout = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
+
+  return { user, loading, logout }
 }
