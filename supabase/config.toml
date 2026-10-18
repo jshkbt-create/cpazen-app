@@ -1,6 +1,11 @@
-[api]
-port = 54321
-schemas = "public"
+# Supabase CLI configuration (placeholder)
+# Replace the placeholders below with your actual Supabase project values.
+# This file is used by the Supabase CLI and deployment scripts.
 
-[db]
-shadow_port = 54322
+project_id = "<SUPABASE_PROJECT_ID>"
+project_ref = "<SUPABASE_PROJECT_REF>"
+# Example API URL: https://your-project.supabase.co
+api_url = "https://<PROJECT>.supabase.co"
+
+# Database host (optional)
+db_host = "db.<PROJECT>.supabase.co"
