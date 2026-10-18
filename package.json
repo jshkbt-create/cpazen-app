@@ -1,6 +1,7 @@
 {
   "name": "cpazen",
   "private": true,
+  "packageManager": "npm@9",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -28,5 +29,8 @@
   ],
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devEngines": {
+    "packageManager": "npm@9"
   }
 }
