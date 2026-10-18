@@ -1,35 +1,12 @@
-"use client"
+import { useEffect } from 'react'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
-
-export function useRealtime() {
-  const [activities, setActivities] = useState<any[]>([])
-
+export const useRealtime = (onMessage: (data: any) => void) => {
   useEffect(() => {
-    const channel = supabase
-      .channel('cpazen-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'conversions' },
-        (payload) => {
-          setActivities((prev) => [
-            {
-              id: payload.new.id,
-              type: 'conversion',
-              message: 'New conversion received',
-              timestamp: new Date(),
-            },
-            ...prev,
-          ].slice(0, 25))
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
+    const ws = new WebSocket(process.env.NEXT_PUBLIC_APP_URL?.replace('http', 'ws') + '/realtime')
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data)
+      onMessage(data)
     }
-  }, [])
-
-  return { activities }
+    return () => ws.close()
+  }, [onMessage])
 }
