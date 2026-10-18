@@ -2,7 +2,8 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    remotePatterns: [{ protocol: 'https', hostname: '**' }],
+    domains: ['localhost', 'cpazen.com', '*.supabase.co'],
+    formats: ['image/avif', 'image/webp'],
   },
   experimental: {
     serverActions: {
@@ -27,7 +28,7 @@ const nextConfig = {
     return [
       {
         source: '/pb',
-        destination: `${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co'}/functions/v1/postback`,
+        destination: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/postback`,
       },
     ]
   },
