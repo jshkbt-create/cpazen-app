@@ -1,5 +1,5 @@
 export const APP_NAME = 'Cpazen'
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://cpazen.com'
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cpazen.com'
 
 export const PLANS = {
   FREE: { name: 'Free', events: 50000, campaigns: 3 },
