@@ -1,16 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { FormEvent, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
-  const [email, setEmail] = useState('demo@cpazen.com')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,19 +19,16 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
       })
+      if (signUpError) throw signUpError
 
-      if (signInError) {
-        throw signInError
-      }
-
-      router.push(redirectTo)
-      router.refresh()
+      router.push('/login')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in.')
+      setError(err instanceof Error ? err.message : 'Failed to create account.')
     } finally {
       setLoading(false)
     }
@@ -42,8 +37,8 @@ export default function LoginPage() {
   return (
     <>
       <p className="text-xs uppercase tracking-[0.3em] text-cyan-400">Cpazen</p>
-      <h1 className="mt-4 text-3xl font-bold">Sign in</h1>
-      <p className="mt-2 text-sm text-slate-400">Access your affiliate dashboard.</p>
+      <h1 className="mt-4 text-3xl font-bold">Create account</h1>
+      <p className="mt-2 text-sm text-slate-400">Start tracking your acquisition performance.</p>
 
       <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
         <div>
@@ -51,9 +46,10 @@ export default function LoginPage() {
           <input
             id="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none ring-0 transition focus:border-cyan-400"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none transition focus:border-cyan-400"
             required
           />
         </div>
@@ -63,28 +59,30 @@ export default function LoginPage() {
           <input
             id="password"
             type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none transition focus:border-cyan-400"
+            minLength={8}
             required
           />
         </div>
 
-        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+        {error ? <p role="alert" className="text-sm text-rose-400">{error}</p> : null}
 
         <button
           type="submit"
           disabled={loading}
           className="w-full rounded-lg bg-cyan-500 px-4 py-3 font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'Creating account...' : 'Create account'}
         </button>
       </form>
 
       <div className="mt-6 text-sm text-slate-400">
-        Need an account?{' '}
-        <Link href="/register" className="font-medium text-cyan-400 hover:text-cyan-300">
-          Create account
+        Already have an account?{' '}
+        <Link href="/login" className="font-medium text-cyan-400 hover:text-cyan-300">
+          Sign in
         </Link>
       </div>
     </>
